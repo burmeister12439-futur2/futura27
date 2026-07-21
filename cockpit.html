@@ -173,6 +173,7 @@
   <div class="wrap">
     <div class="brand">Futura<span class="dot">·</span>Cockpit</div>
     <nav class="nav">
+      <a href="#mitmachen">Mach mit</a>
       <a href="#termine">Termine</a>
       <a href="#straenge">Arbeitsstränge</a>
       <a href="#offen">Offene Punkte</a>
@@ -208,6 +209,62 @@
     <span class="st open"><span class="d"></span>offen</span>
     <span class="st crit"><span class="d"></span>dringend / kritisch</span>
   </div>
+
+  <!-- MACH MIT -->
+  <section id="mitmachen">
+    <div class="sec-h"><span class="tag" style="background:var(--magenta)"></span><h2>Mach mit — trag dich ein</h2><span class="hint">wir suchen Menschen, die etwas übernehmen</span></div>
+    <div class="card" style="background:#fff5fb;border-color:#f3cce4">
+      <p style="margin:0 0 10px;font-size:14px;color:var(--ink2)">Die Futura wird von vielen getragen. Wo ist noch Platz? Trag dich ein — mit einer Rolle, einer einzelnen Idee, oder einfach mit dem, was du mitbringst (Zeit, Räume, Wissen, Kontakte, Förderung, eine Patenschaft). Klaus meldet sich bei dir.</p>
+      <form id="mitForm" onsubmit="return mitSend(event)" style="display:grid;gap:12px;margin-top:6px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <label style="font-size:13px;font-weight:600;color:var(--ink)">Name<input id="m_name" required style="width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px"></label>
+          <label style="font-size:13px;font-weight:600;color:var(--ink)">E-Mail<input id="m_mail" type="email" required style="width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px"></label>
+        </div>
+        <label style="font-size:13px;font-weight:600;color:var(--ink)">Wobei möchtest du mitmachen?
+          <select id="m_rolle" style="width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff">
+            <option>Leitung Fokusthema ① Stadtlandschaften</option>
+            <option>Leitung Fokusthema ③ Zukunft selber machen</option>
+            <option>Leitung Fokusthema ④ Alle an einen Tisch</option>
+            <option>Streifzüge (der Einstieg)</option>
+            <option>Organisation & Koordination</option>
+            <option>Eine einzelne Idee übernehmen (unten nennen)</option>
+            <option>Grand Opening / Lange Nacht mitgestalten</option>
+            <option>Etwas anderes (unten nennen)</option>
+          </select>
+        </label>
+        <label style="font-size:13px;font-weight:600;color:var(--ink)">Falls Idee / etwas anderes: was genau?<input id="m_detail" style="width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px"></label>
+        <div style="font-size:13px;font-weight:600;color:var(--ink)">Was bringst du mit?
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-weight:400">
+            <label style="font-size:13.5px"><input type="checkbox" class="m_bring" value="Zeit"> Zeit</label>
+            <label style="font-size:13.5px"><input type="checkbox" class="m_bring" value="Räume"> Räume</label>
+            <label style="font-size:13.5px"><input type="checkbox" class="m_bring" value="Wissen"> Wissen</label>
+            <label style="font-size:13.5px"><input type="checkbox" class="m_bring" value="Geld/Förderung"> Geld/Förderung</label>
+            <label style="font-size:13.5px"><input type="checkbox" class="m_bring" value="Idee/Format"> Idee/Format</label>
+            <label style="font-size:13.5px"><input type="checkbox" class="m_bring" value="Patenschaft"> Patenschaft</label>
+            <label style="font-size:13.5px"><input type="checkbox" class="m_bring" value="Kontakte"> Kontakte</label>
+          </div>
+        </div>
+        <label style="font-size:13px;font-weight:600;color:var(--ink)">Nachricht (optional)<textarea id="m_msg" rows="2" style="width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px"></textarea></label>
+        <div><button type="submit" style="background:var(--magenta);color:#fff;border:none;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer">Eintragen</button></div>
+        <div id="m_ok" style="display:none;font-size:13.5px;color:#1c6b3d;background:#e7f5ec;border-radius:8px;padding:10px 12px">Danke! Dein Mailprogramm öffnet sich mit der fertigen Nachricht an Klaus — bitte nur noch abschicken. Klappt das nicht, schreib direkt an <b>k.burmeister@industriesalon.de</b>.</div>
+      </form>
+    </div>
+  </section>
+  <script>
+    function mitSend(e){
+      e.preventDefault();
+      var g=function(id){return (document.getElementById(id).value||'').trim();};
+      var bring=Array.prototype.slice.call(document.querySelectorAll('.m_bring:checked')).map(function(c){return c.value;}).join(', ');
+      var lines=["Neue Eintragung — Futura mitmachen","",
+        "Name: "+g('m_name'),"E-Mail: "+g('m_mail'),
+        "Wobei: "+g('m_rolle'),"Genauer: "+(g('m_detail')||'—'),
+        "Bringt mit: "+(bring||'—'),"Nachricht: "+(g('m_msg')||'—')];
+      var subj="Futura — Ich möchte mitmachen: "+g('m_name');
+      window.location.href="mailto:k.burmeister@industriesalon.de?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(lines.join("\n"));
+      document.getElementById('m_ok').style.display='block';
+      return false;
+    }
+  </script>
 
   <!-- TERMINE -->
   <section id="termine">
