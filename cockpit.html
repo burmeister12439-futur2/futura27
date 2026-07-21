@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futura Biennale 2027 — Steuerungscockpit</title>
+<style>
+  :root{
+    --magenta:#ED0D92; --blau:#0BB2F0; --ocker:#C8A60F;
+    --ink:#17181c; --ink2:#4a4e57; --muted:#868b96;
+    --line:#e7e8ec; --surface:#ffffff; --bg:#f5f6f8; --band:#111318;
+    /* Status (mit Label, nie Farbe allein) */
+    --ok:#2e9d5b; --ok-bg:#e7f5ec;
+    --run:#1f86c9; --run-bg:#e6f2fb;
+    --open:#c98a10; --open-bg:#fbf1dd;
+    --crit:#d5443b; --crit-bg:#fbe8e6;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* Top nav */
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topbar .wrap{display:flex;align-items:center;gap:18px;height:54px;flex-wrap:wrap}
+  .brand{font-weight:800;letter-spacing:-.02em;font-size:16px;white-space:nowrap}
+  .brand .dot{color:var(--magenta)}
+  .nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto}
+  .nav a{color:var(--ink2);text-decoration:none;font-size:13px;font-weight:600;
+    padding:6px 10px;border-radius:7px}
+  .nav a:hover{background:var(--bg);color:var(--ink)}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;
+    font-size:13px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .btn:hover{border-color:var(--muted)}
+
+  /* Hero */
+  .hero{background:var(--band);color:#fff;padding:34px 0 30px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;
+    background:radial-gradient(circle at center,rgba(237,13,146,.55),rgba(237,13,146,0) 62%);pointer-events:none}
+  .hero .wrap{position:relative;z-index:1}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:#cfd2da}
+  .kicker .bar{width:26px;height:3px;background:var(--magenta);border-radius:3px}
+  .hero h1{font-size:34px;line-height:1.06;margin:12px 0 6px;font-weight:800;letter-spacing:-.02em}
+  .hero h1 span{color:var(--blau)}
+  .hero .sub{color:#c9cdd6;font-size:15.5px;max-width:640px}
+  .herostats{display:flex;gap:14px;flex-wrap:wrap;margin-top:22px}
+  .hstat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;padding:12px 16px;min-width:120px}
+  .hstat .n{font-size:24px;font-weight:800;letter-spacing:-.02em}
+  .hstat .n.mag{color:#ff5bb8}.hstat .n.blu{color:#59cdff}.hstat .n.okr{color:#e9c53a}
+  .hstat .l{font-size:11.5px;color:#c9cdd6;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+  /* Sections */
+  section{padding:34px 0 6px}
+  .sec-h{display:flex;align-items:baseline;gap:12px;margin:0 0 16px}
+  .sec-h h2{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:0}
+  .sec-h .tag{width:10px;height:10px;border-radius:3px}
+  .sec-h .hint{color:var(--muted);font-size:13px;margin-left:auto}
+
+  .grid{display:grid;gap:14px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:900px){.g3,.g2,.g4{grid-template-columns:1fr 1fr}}
+  @media(max-width:620px){.g3,.g2,.g4{grid-template-columns:1fr}.nav{display:none}}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px 17px}
+  .card h3{margin:0 0 4px;font-size:15.5px;font-weight:750}
+  .card .meta{font-size:12.5px;color:var(--muted)}
+  .card p{margin:9px 0 0;font-size:13.5px;color:var(--ink2)}
+  .next{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
+  .next b{color:var(--ink);font-weight:700}
+
+  /* Status badge */
+  .st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+    padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .st .d{width:7px;height:7px;border-radius:50%}
+  .st.ok{background:var(--ok-bg);color:#1c6b3d}.st.ok .d{background:var(--ok)}
+  .st.run{background:var(--run-bg);color:#155f8f}.st.run .d{background:var(--run)}
+  .st.open{background:var(--open-bg);color:#8a5e07}.st.open .d{background:var(--open)}
+  .st.crit{background:var(--crit-bg);color:#9e2c25}.st.crit .d{background:var(--crit)}
+  .cardtop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+
+  /* Timeline */
+  .tl{position:relative;margin-left:8px;padding-left:26px;border-left:2px solid var(--line)}
+  .tl .item{position:relative;padding:0 0 20px}
+  .tl .item::before{content:"";position:absolute;left:-34px;top:2px;width:13px;height:13px;
+    border-radius:50%;background:#fff;border:3px solid var(--blau)}
+  .tl .item.mag::before{border-color:var(--magenta)}
+  .tl .item.done::before{border-color:var(--ok);background:var(--ok)}
+  .tl .item.crit::before{border-color:var(--crit)}
+  .tl .when{font-size:12px;font-weight:800;letter-spacing:.03em;color:var(--magenta);text-transform:uppercase}
+  .tl .item.crit .when{color:var(--crit)}
+  .tl .what{font-size:14px;font-weight:650;margin-top:2px}
+  .tl .desc{font-size:13px;color:var(--ink2);margin-top:2px}
+
+  /* Decisions */
+  .dlist{display:grid;gap:8px}
+  .drow{display:flex;gap:12px;align-items:flex-start;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+  .drow .chk{color:var(--ok);font-weight:800;flex:none;margin-top:1px}
+  .drow .txt{font-size:13.5px}
+  .drow .when{font-size:11.5px;color:var(--muted);margin-left:auto;white-space:nowrap;font-weight:600}
+
+  /* To-do table */
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);
+    border-radius:13px;overflow:hidden}
+  th,td{text-align:left;padding:11px 14px;font-size:13.5px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#fafbfc;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+  tr:last-child td{border-bottom:none}
+  td .who{color:var(--ink2);font-size:12.5px}
+  .pri{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px}
+  .pri.hi{background:var(--crit-bg);color:#9e2c25}
+  .pri.mid{background:var(--open-bg);color:#8a5e07}
+  .pri.lo{background:var(--bg);color:var(--ink2)}
+  .filterbar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .fbtn{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 13px;
+    font-size:12.5px;font-weight:650;cursor:pointer;color:var(--ink2)}
+  .fbtn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* Team */
+  .person{display:flex;gap:13px;align-items:flex-start}
+  .ava{width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;
+    justify-content:center;font-weight:800;color:#fff;font-size:16px}
+  .cluster{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px}
+  .cluster .no{width:26px;height:26px;border-radius:7px;background:var(--band);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:none}
+  .cluster .nm{font-size:13.5px;font-weight:650}
+  .cluster .rs{margin-left:auto;font-size:12px}
+
+  /* stat tiles */
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px}
+  .tile .n{font-size:30px;font-weight:850;letter-spacing:-.02em;line-height:1}
+  .tile .l{font-size:12.5px;color:var(--ink2);margin-top:6px}
+  .tile.accent-m{border-top:3px solid var(--magenta)}
+  .tile.accent-b{border-top:3px solid var(--blau)}
+  .tile.accent-o{border-top:3px solid var(--ocker)}
+  .tile.warn{border-top:3px solid var(--crit)}
+  .tile.warn .n{color:var(--crit)}
+
+  /* contacts */
+  .clist{display:grid;gap:8px}
+  .crow{display:flex;gap:12px;align-items:center;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+  .crow .nm{font-weight:700;font-size:13.5px}
+  .crow .rl{font-size:12.5px;color:var(--muted)}
+  .crow .stt{margin-left:auto}
+
+  footer{margin:40px 0 30px;padding-top:18px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:12.5px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 16px}
+  .legend .st{cursor:default}
+
+  @media print{
+    .topbar,.filterbar,.btn{display:none}
+    body{background:#fff;font-size:12px}
+    .hero{background:#fff;color:#000;border-bottom:2px solid #000}
+    .hero h1 span{color:#000}.hero .sub,.hstat .l{color:#333}
+    .hstat{border-color:#ccc}.hstat .n.mag,.hstat .n.blu,.hstat .n.okr{color:#000}
+    section{padding:16px 0 4px;break-inside:avoid}
+    .card,.drow,.tile,.crow{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">Futura<span class="dot">·</span>Cockpit</div>
+    <nav class="nav">
+      <a href="#termine">Termine</a>
+      <a href="#straenge">Arbeitsstränge</a>
+      <a href="#offen">Offene Punkte</a>
+      <a href="#team">Team</a>
+      <a href="#ideen">Ideen</a>
+      <a href="#kontakte">Kontakte</a>
+      <a href="#entschieden">Entschieden</a>
+    </nav>
+    <button class="btn" onclick="window.print()">Als PDF / drucken</button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="bar"></span>Kernteam-Übersicht · Stand 21. Juli 2026 · vertraulich</div>
+    <h1>Futura Biennale 2027 — <span>Werkstatt für das Morgen</span></h1>
+    <p class="sub">Zweiwöchiges Zukunftsfestival in Schöneweide, 10.–26. September 2027. Getragen vom Industriesalon Schöneweide e.V. Drei Bewegungen: Schöneweide fragt · baut · zeigt.</p>
+    <div class="herostats">
+      <div class="hstat"><div class="n mag" id="cd-days">—</div><div class="l">Tage bis Festival</div></div>
+      <div class="hstat"><div class="n blu">5</div><div class="l">Cluster</div></div>
+      <div class="hstat"><div class="n okr">1</div><div class="l">Zentraler Wettbewerb</div></div>
+      <div class="hstat"><div class="n">73</div><div class="l">Ideen im Atlas</div></div>
+      <div class="hstat"><div class="n">9</div><div class="l">Arbeitsstränge</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="legend" style="margin-top:20px">
+    <span class="st ok"><span class="d"></span>erledigt</span>
+    <span class="st run"><span class="d"></span>läuft</span>
+    <span class="st open"><span class="d"></span>offen</span>
+    <span class="st crit"><span class="d"></span>dringend / kritisch</span>
+  </div>
+
+  <!-- TERMINE -->
+  <section id="termine">
+    <div class="sec-h"><span class="tag" style="background:var(--magenta)"></span><h2>Termine &amp; Meilensteine</h2><span class="hint">der rote Faden bis zum Festival</span></div>
+    <div class="tl">
+      <div class="item crit">
+        <div class="when">bis 26. Juli 2026</div>
+        <div class="what">IBA-Broschüre „Ring frei für eine IBA!" holen</div>
+        <div class="desc">Alte Feuerwache, Tempelhof · Katalog 190 S., kostenlos. Zeigt Findungsprozess &amp; gescheiterte Berliner IBA-Anläufe. Nur noch wenige Tage.</div>
+      </div>
+      <div class="item mag">
+        <div class="when">Spätsommer 2026</div>
+        <div class="what">Mail an Christian von Oppen (SenStadt, IBA) raus</div>
+        <div class="desc">Entwurf liegt vor. Anknüpfen an das Telefonat vom 17.07., zwei Kernfragen zum Franchisemodell.</div>
+      </div>
+      <div class="item">
+        <div class="when">12. September 2026</div>
+        <div class="what">Walk of Fame — Festival der Industriekultur</div>
+        <div class="desc">Läuft über WiFö (Sven Schmohl). Kontext, an den die Futura andockt.</div>
+      </div>
+      <div class="item mag">
+        <div class="when">September 2026</div>
+        <div class="what">Gespräch mit von Oppen (IBA-Andockung)</div>
+        <div class="desc">Ziel: klären, ob Schöneweide über Franchisemodell / Experimentierphase anschlussfähig ist. Daran hängt, ob die IBA im Blatt bleibt.</div>
+      </div>
+      <div class="item crit">
+        <div class="when">Frühjahr 2027</div>
+        <div class="what">Auslobung Wettbewerb „HandWerker Campus Schöneweide"</div>
+        <div class="desc">Davor muss die IBA-Antwort da sein. Zeitgleich: IBA öffnet Austausch mit Zivilgesellschaft &amp; Wirtschaft · Fachwerkstatt „Transformation im Umbruch".</div>
+      </div>
+      <div class="item mag">
+        <div class="when">10.–26. September 2027</div>
+        <div class="what">Futura Biennale 2027</div>
+        <div class="desc">Auftakt am Denkmaltag-Wochenende. Finale „Schauplatz Morgen" mit Preisverleihung und Kaffeeplausch am Kaisersteg.</div>
+      </div>
+      <div class="item">
+        <div class="when">2029 · 2030 · 2034–37</div>
+        <div class="what">Anschlussperspektive</div>
+        <div class="desc">Futura ’29 (u.a. „Museum der Zukunft" als Wettbewerb) · IBA-Projektphase ab 2030 · IBA-Ausstellung 2034–37 · EXPO 2035 als Fernhorizont.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARBEITSSTRÄNGE -->
+  <section id="straenge">
+    <div class="sec-h"><span class="tag" style="background:var(--blau)"></span><h2>Arbeitsstränge</h2><span class="hint">Status &amp; jeweils nächster Schritt</span></div>
+    <div class="grid g3">
+
+      <div class="card">
+        <div class="cardtop"><h3>Grundkonzept</h3><span class="st run"><span class="d"></span>läuft</span></div>
+        <div class="meta">Beta v7 (16.07.) · 14 Seiten</div>
+        <p>Drei zurückhängende Beschlüsse nachgezogen: ein Wettbewerb, Museum umpositioniert, Reinbeckhallen als Träger raus.</p>
+        <div class="next"><b>Nächster Schritt:</b> 3 vs. 6 Leitfragen im Team klären · alte v5 in <i>Prozess/</i> gegen v7 bereinigen.</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>One-Pager &amp; Master</h3><span class="st ok"><span class="d"></span>weit fertig</span></div>
+        <div class="meta">Master v14 · A v9 · C v17 · B v5</div>
+        <p>A (Einladung) und Master arbeitsfertig, Kaffeeplausch zurück im Master. C gestaltet in Futura-Handschrift.</p>
+        <div class="next"><b>Nächster Schritt:</b> One-Pager B an die A-Linie angleichen.</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>HandWerker Campus (Wettbewerb)</h3><span class="st run"><span class="d"></span>läuft</span></div>
+        <div class="meta">Einseiter v10 · 2 Fassungen (Bezirk / Senat)</div>
+        <p>Name entschieden, Einseiter freigegeben, alle IBA-Falschaussagen geprüft und ersetzt. Finanzierung als 3 Schienen benannt.</p>
+        <div class="next"><b>Nächster Schritt:</b> Handwerkskammer + Elektroinnung ansprechen (Träger der ÜBS-Förderung) · Anschreiben v3.</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>IBA-Andockung</h3><span class="st crit"><span class="d"></span>kritisch fürs Timing</span></div>
+        <div class="meta">Tiefenrecherche gg. Drucksache 19/3097</div>
+        <p>Schöneweide liegt nicht in der Ring-Kulisse. Hebel: Franchisemodell, Experimentierphase ab 2026, Fenster Frühjahr 2027, 2,0 Mio. € Startmittel.</p>
+        <div class="next"><b>Nächster Schritt:</b> Gespräch von Oppen (Sept) · IBA-Memo v2 gegen die Drucksache neu (5 Fehler).</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>Finanzierung</h3><span class="st ok"><span class="d"></span>Grundlage steht</span></div>
+        <div class="meta">3 belegte Schienen + IBA als Option</div>
+        <p>ÜBS-Förderung (45–65 % + 15 % Berlin), Junges Wohnen (ab 2027 1 Mrd. €/J), Zukunftsort Schöneweide. Kein Satz hängt an der IBA.</p>
+        <div class="next"><b>Nächster Schritt:</b> GRW · EFRE Berlin · Zukunftsorte-Mittel im Einzelnen prüfen.</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>Ideen-Atlas</h3><span class="st run"><span class="d"></span>steht, in Pflege</span></div>
+        <div class="meta">v2 · 73 Ideen · Portfolio-Chart</div>
+        <p>Alle Eingänge bis 15.07. als Steckbriefe, nach acht Kriterien eingeschätzt (Diskussionsvorschlag, kein Beschluss).</p>
+        <div class="next"><b>Nächster Schritt:</b> 21 Kernideen ohne Verantwortliche besetzen (v.a. Cluster 1 &amp; 2).</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>Kongress „update futures _01"</h3><span class="st open"><span class="d"></span>Titel steht</span></div>
+        <div class="meta">„Zukunft ist kein Betriebssystem"</div>
+        <p>Schließt Phase 1 ab, „just for one day". Erlebbare KI mit MerzMensch am Eröffnungswochenende.</p>
+        <div class="next"><b>Nächster Schritt:</b> Techbros-Analyse als Quelle · Doppelstruktur mit Output „Schöneweider update".</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>Kommunikation &amp; Web</h3><span class="st run"><span class="d"></span>v1 online</span></div>
+        <div class="meta">futura27-Seite · KiezKarte · Verteiler</div>
+        <p>Webauftritt v1 online, Zukunftsquiz &amp; Ideen-Template. Führung: Marielle (Ermöglichung II).</p>
+        <div class="next"><b>Nächster Schritt:</b> Ben Hotz in den Verteiler · zielgruppen­spezifische Sprachfassungen auf Anfrage.</div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><h3>Anschreiben / Outreach</h3><span class="st run"><span class="d"></span>läuft</span></div>
+        <div class="meta">Liste v5 · 11 Zeilen</div>
+        <p>Zeidler &amp; Schmohl am 17.07. raus. Zentrale Tracking-Liste als Excel, gelbe Spalten füllt Klaus.</p>
+        <div class="next"><b>Nächster Schritt:</b> HTW-Rolle klären (dringend) · Kammer/Innung · von Oppen.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- OFFENE PUNKTE -->
+  <section id="offen">
+    <div class="sec-h"><span class="tag" style="background:var(--crit)"></span><h2>Offene Punkte &amp; Baustellen</h2><span class="hint">was hängt — mit Verantwortung &amp; Frist</span></div>
+    <div class="filterbar" id="filterbar">
+      <button class="fbtn active" data-f="all">Alle</button>
+      <button class="fbtn" data-f="hi">Nur dringend/hoch</button>
+      <button class="fbtn" data-f="mid">Mittel</button>
+      <button class="fbtn" data-f="lo">Klein</button>
+    </div>
+    <table id="todo">
+      <thead><tr><th style="width:42%">Thema</th><th>Wer</th><th>Frist</th><th>Priorität</th></tr></thead>
+      <tbody>
+        <tr data-p="hi"><td><b>HTW-Rolle in der Auslobung klären</b> — Zusammenarbeit läuft (Konsortium „urban ignite"); die Rolle bei der Auslobung ist noch abzustimmen und zu bestätigen.</td><td class="who">Klaus</td><td class="who">vor Auslobung</td><td><span class="pri hi">dringend</span></td></tr>
+        <tr data-p="hi"><td><b>IBA-Frage</b> — gilt das Franchise-Prinzip für Berliner Vorhaben außerhalb der Ring-Kulisse? Zugang zur Experimentierphase?</td><td class="who">Klaus · von Oppen</td><td class="who">Gespräch Sept · vor Auslobung</td><td><span class="pri hi">hoch</span></td></tr>
+        <tr data-p="hi"><td><b>Handwerkskammer &amp; Elektroinnung ansprechen</b> — nötig für ÜBS-Förderung (Antragsteller sind Kammern/Innungen, keine Vereine). Ansprache vorbereiten.</td><td class="who">Klaus</td><td class="who">vor Auslobung</td><td><span class="pri hi">hoch</span></td></tr>
+        <tr data-p="hi"><td><b>3 vs. 6 Leitfragen entscheiden</b> — Cluster und Grundkonzept hängen an sechs, die One-Pager arbeiten mit drei.</td><td class="who">Kernteam</td><td class="who">bald</td><td><span class="pri hi">hoch</span></td></tr>
+        <tr data-p="hi"><td><b>Fläche Wilhelminenhofstraße</b> — noch nicht gesichert, bleibt in Papieren ungenannt. Kanzler-Tullio ist der Schlüssel.</td><td class="who">Klaus (Senat/Bezirk)</td><td class="who">offen</td><td><span class="pri hi">hoch</span></td></tr>
+        <tr data-p="mid"><td><b>Grundkonzept bereinigen</b> — alte v5 in <i>Prozess/</i> steht fälschlich als aktuell neben v7.</td><td class="who">Klaus · Claude</td><td class="who">—</td><td><span class="pri mid">mittel</span></td></tr>
+        <tr data-p="mid"><td><b>Schauplatz Morgen</b> — Veranstaltungsort und kuratorische Trägerschaft entscheiden.</td><td class="who">Kernteam</td><td class="who">—</td><td><span class="pri mid">mittel</span></td></tr>
+        <tr data-p="mid"><td><b>IBA-Memo v2</b> — gegen die Drucksache 19/3097 neu schreiben (5 sachliche Fehler in v1).</td><td class="who">Claude</td><td class="who">vor Auslobung</td><td><span class="pri mid">mittel</span></td></tr>
+        <tr data-p="mid"><td><b>Anschreiben v3 Kanzler-Tullio</b> — als Anknüpfung an die laufende Kooperation (Fachwerkstatt), nicht als Kaltakquise.</td><td class="who">Claude · Klaus</td><td class="who">—</td><td><span class="pri mid">mittel</span></td></tr>
+        <tr data-p="lo"><td><b>Akteursleiste prüfen</b> — Fraunhofer IAO und WiFö (Schmohl) stehen auf keinem Futura-Blatt, tragen aber mit.</td><td class="who">Klaus</td><td class="who">—</td><td><span class="pri lo">klein</span></td></tr>
+        <tr data-p="lo"><td><b>Ordner/Verweise</b> — <i>HandWerker_Campus_Ansprachen/</i> umbenennen · Ben Hotz in Verteiler nachtragen.</td><td class="who">Claude</td><td class="who">—</td><td><span class="pri lo">klein</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- TEAM -->
+  <section id="team">
+    <div class="sec-h"><span class="tag" style="background:var(--ocker)"></span><h2>Wer macht was</h2><span class="hint">Kernteam &amp; Cluster-Verantwortung</span></div>
+    <div class="grid g2" style="margin-bottom:14px">
+      <div class="card"><div class="person">
+        <div class="ava" style="background:var(--magenta)">KB</div>
+        <div><h3 style="margin-bottom:2px">Klaus Burmeister</h3>
+        <div class="meta">Initiator &amp; Kurator</div>
+        <p>Ermöglichung I: Finanzierung &amp; Organisation. Außenkontakte (Zeidler, Kanzler-Tullio, von Oppen), Gesamtsteuerung.</p></div>
+      </div></div>
+      <div class="card"><div class="person">
+        <div class="ava" style="background:var(--blau)">MM</div>
+        <div><h3 style="margin-bottom:2px">Marielle Morawitz</h3>
+        <div class="meta">Co-Organisation</div>
+        <p>Ermöglichung II: Kommunikation. Gemeinsam mit Albert Cluster 3 „Zukunft vor Augen" (Kunst).</p></div>
+      </div></div>
+    </div>
+    <div class="grid g3">
+      <div class="cluster"><span class="no">1</span><span class="nm">Große Würfe</span><span class="rs"><span class="st open"><span class="d"></span>Leitung offen</span></span></div>
+      <div class="cluster"><span class="no">2</span><span class="nm">Kühle Orte, blaues Band</span><span class="rs"><span class="st open"><span class="d"></span>Leitung offen</span></span></div>
+      <div class="cluster"><span class="no">3</span><span class="nm">Zukunft vor Augen</span><span class="rs"><span class="st ok"><span class="d"></span>Albert &amp; Marielle</span></span></div>
+      <div class="cluster"><span class="no">4</span><span class="nm">Zukunft zum Anfassen</span><span class="rs"><span class="st open"><span class="d"></span>Leitung offen</span></span></div>
+      <div class="cluster"><span class="no">5</span><span class="nm">Alle an einen Tisch</span><span class="rs"><span class="st open"><span class="d"></span>Leitung offen</span></span></div>
+      <div class="cluster" style="background:var(--crit-bg);border-color:#f3ccc8"><span class="no" style="background:var(--crit)">!</span><span class="nm">21 von 34 Kernideen ohne Verantwortliche</span></div>
+    </div>
+  </section>
+
+  <!-- IDEEN -->
+  <section id="ideen">
+    <div class="sec-h"><span class="tag" style="background:var(--magenta)"></span><h2>Ideen-Atlas in Zahlen</h2><span class="hint">Stand v2, 16.07.2026</span></div>
+    <div class="grid g4">
+      <div class="tile accent-m"><div class="n">73</div><div class="l">Ideen gesamt aus allen Quellen</div></div>
+      <div class="tile accent-b"><div class="n">34</div><div class="l">Kernideen (statt Rand)</div></div>
+      <div class="tile warn"><div class="n">21</div><div class="l">Kernideen ohne Verantwortliche — die größte Baustelle</div></div>
+      <div class="tile accent-o"><div class="n">8</div><div class="l">neuartige Leuchtturm-Kandidaten</div></div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="tile"><div class="n">51</div><div class="l">Ideen kiez- / bezirksaffin</div></div>
+      <div class="tile"><div class="n">11</div><div class="l">bundesweite Brücken</div></div>
+      <div class="tile"><div class="n">6</div><div class="l">strittige Ideen mit Hinweis</div></div>
+    </div>
+  </section>
+
+  <!-- KONTAKTE -->
+  <section id="kontakte">
+    <div class="sec-h"><span class="tag" style="background:var(--blau)"></span><h2>Schlüsselkontakte &amp; Anschreiben</h2><span class="hint">Anschreiben-Liste v5</span></div>
+    <div class="clist">
+      <div class="crow"><span class="nm">Ulrike Zeidler</span><span class="rl">Stadtentwicklung TK</span><span class="stt"><span class="st ok"><span class="d"></span>Mail raus 17.07.</span></span></div>
+      <div class="crow"><span class="nm">Sven Schmohl</span><span class="rl">WiFö Bezirksamt TK</span><span class="stt"><span class="st ok"><span class="d"></span>Mail raus 17.07.</span></span></div>
+      <div class="crow"><span class="nm">Christian von Oppen</span><span class="rl">SenStadt · IBA 2034–37</span><span class="stt"><span class="st run"><span class="d"></span>Mail-Entwurf · Gespräch Sept</span></span></div>
+      <div class="crow"><span class="nm">Kathrin Kanzler-Tullio</span><span class="rl">SenWEB · Ref. IV A (Fläche)</span><span class="stt"><span class="st open"><span class="d"></span>Anschreiben v3 offen</span></span></div>
+      <div class="crow"><span class="nm">HTW Berlin</span><span class="rl">Auslobungs-Partnerin</span><span class="stt"><span class="st crit"><span class="d"></span>Rolle klären</span></span></div>
+      <div class="crow"><span class="nm">Handwerkskammer &amp; Elektroinnung</span><span class="rl">Träger ÜBS-Förderung</span><span class="stt"><span class="st open"><span class="d"></span>Ansprache vorbereiten</span></span></div>
+      <div class="crow"><span class="nm">Praxispartner Handwerk &amp; Produktion</span><span class="rl">A-Kontakte vom Zukunftstag</span><span class="stt"><span class="st open"><span class="d"></span>anfragen</span></span></div>
+    </div>
+  </section>
+
+  <!-- ENTSCHIEDEN -->
+  <section id="entschieden">
+    <div class="sec-h"><span class="tag" style="background:var(--ok)"></span><h2>Was schon entschieden ist</h2><span class="hint">damit nichts wieder aufgemacht wird</span></div>
+    <div class="dlist">
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Termin:</b> Fr 10. – So 26. September 2027 (Auftakt am Denkmaltag-Wochenende).</span><span class="when">07.07.</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Ein Wettbewerb</b> statt zwei — im Zentrum der HandWerker Campus Schöneweide.</span><span class="when">12.07.</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Name:</b> „HandWerker Campus Schöneweide" (löst „Werkbund Schöneweide" ab — keine Markenkollision).</span><span class="when">16.07.</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Museum der Zukunft:</b> dezentrale Erzähl- &amp; Ausstellungsebene, eigener Wettbewerb frühestens Futura ’29.</span><span class="when">12.07.</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Kongress-Titel:</b> „update futures _01 — Zukunft ist kein Betriebssystem. Das Morgen gehört allen."</span><span class="when">12.07.</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Stiftung Reinbeckhallen</b> als Träger gestrichen (der Ort Reinbeckhallen bleibt).</span><span class="when">12.07.</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>IBA</b> als Option, nicht als Bedingung — Finanzierung steht auf drei eigenen Schienen.</span><span class="when">16.07.</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Gesetzt im Wortlaut:</b> „Schöneweider Modell" &amp; „Messe für techno-soziale Innovationen". <b>Abschluss:</b> Kaffeeplausch am Kaisersteg.</span><span class="when">—</span></div>
+      <div class="drow"><span class="chk">✓</span><span class="txt"><b>Kontakt-Mail:</b> k.burmeister@industriesalon.de.</span><span class="when">16.07.</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <b>Futura-Steuerungscockpit</b> · interne Arbeitsübersicht des Kernteams der Futura Biennale 2027.<br>
+    <b>Bitte den Link nur im Kernteam teilen</b> — die Seite ist unverlinkt, aber nicht zugangsgeschützt.<br>
+    Statuseinschätzungen sind Arbeitsstand, keine Beschlüsse. Stand 21. Juli 2026. Für Treffen: oben rechts „Als PDF / drucken".
+  </footer>
+
+</div>
+
+<script>
+  // Countdown bis Festivalstart
+  (function(){
+    var start = new Date(2027, 8, 10); // 10. Sept 2027
+    var now = new Date();
+    var days = Math.max(0, Math.round((start - now) / 86400000));
+    document.getElementById('cd-days').textContent = days;
+  })();
+
+  // Filter offene Punkte
+  var fb = document.getElementById('filterbar');
+  fb.addEventListener('click', function(e){
+    var b = e.target.closest('.fbtn'); if(!b) return;
+    fb.querySelectorAll('.fbtn').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');
+    var f = b.dataset.f;
+    document.querySelectorAll('#todo tbody tr').forEach(function(tr){
+      tr.style.display = (f==='all' || tr.dataset.p===f) ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>
