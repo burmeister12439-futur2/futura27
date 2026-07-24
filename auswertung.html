@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futura — Auswahl-Auswertung</title>
+<style>
+  :root{--mag:#ED0D92;--lead:#0A78B0;--blau:#0BB2F0;--ink:#17181c;--ink2:#4a4e57;--mut:#868b96;--line:#e7e8ec;--bg:#f5f6f8;
+    --ok:#1c6b3d;--ok-bg:#e7f5ec;--wu:#155f8f;--wu-bg:#e6f2fb;--st:#8a5e07;--st-bg:#fbf1dd;--no:#9e2c25;--no-bg:#fbe8e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 60px}
+  .hero{background:#111318;color:#fff;padding:30px 0 26px}
+  .hero .wrap{padding-bottom:0}
+  .kick{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#cfd2da}
+  .kick b{color:var(--blau)}
+  h1{font-size:28px;margin:8px 0 6px;font-weight:800;letter-spacing:-.02em}
+  .hero p{color:#c9cdd6;font-size:14.5px;max-width:680px;margin:0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:18px}
+  textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.45}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink)}
+  button.primary{background:var(--lead);color:#fff;border-color:var(--lead)}
+  button.ghost{font-weight:600;color:var(--ink2)}
+  .hint{color:var(--mut);font-size:12.5px}
+  h2{font-size:18px;font-weight:800;margin:28px 0 4px}
+  .sub{color:var(--mut);font-size:13px;margin:0 0 14px}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:720px){.tiles{grid-template-columns:1fr 1fr}}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .tile .n{font-size:26px;font-weight:850;letter-spacing:-.02em;line-height:1}
+  .tile .l{font-size:12px;color:var(--ink2);margin-top:6px}
+  .tile.a{border-top:3px solid var(--lead)} .tile.b{border-top:3px solid var(--ok)}
+  .tile.c{border-top:3px solid var(--st)} .tile.d{border-top:3px solid var(--mut)}
+  .voters{margin:10px 0 0;font-size:13px;color:var(--ink2)}
+  .voters .v{display:inline-block;background:#eef2f6;border-radius:20px;padding:3px 11px;margin:3px 5px 0 0;font-weight:600}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;margin-top:14px}
+  th,td{text-align:left;padding:9px 11px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{background:#fafbfc;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);font-weight:700;cursor:pointer;white-space:nowrap}
+  th.num,td.num{text-align:center;width:60px}
+  tr:last-child td{border-bottom:none}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px;vertical-align:middle}
+  .cnt{display:inline-block;min-width:22px;text-align:center;font-weight:800;border-radius:6px;padding:1px 6px}
+  .cnt.p{background:var(--ok-bg);color:var(--ok)} .cnt.w{background:var(--wu-bg);color:var(--wu)} .cnt.n{background:var(--no-bg);color:var(--no)} .cnt.z{color:var(--mut);font-weight:400;background:none}
+  .chip{font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .chip.fav{background:var(--ok-bg);color:var(--ok)} .chip.prog{background:var(--ok-bg);color:var(--ok)}
+  .chip.wu{background:var(--wu-bg);color:var(--wu)} .chip.st{background:var(--st-bg);color:var(--st)}
+  .chip.no{background:var(--no-bg);color:var(--no)} .chip.ns{background:#eef0f3;color:var(--mut)}
+  .take{color:var(--mag);font-weight:700;font-size:12px}
+  footer{margin-top:34px;color:var(--mut);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="hero"><div class="wrap">
+  <div class="kick">Futura Biennale 2027 · <b>Auswahl-Auswertung</b></div>
+  <h1>Was das Team ausgewählt hat</h1>
+  <p>Rückläufer-Mails aus der Cockpit-Umfrage hier einfügen (beliebig viele, einfach untereinander) und auf „Auswerten“ klicken. Das Tool zählt pro Idee die Stimmen zusammen. Nichts wird gespeichert — alles läuft nur in deinem Browser.</p>
+</div></div>
+
+<div class="wrap">
+  <h2>1 · Rückläufe einfügen</h2>
+  <p class="sub">Eine oder mehrere Antwort-Mails (Format wie aus der Umfrage). Trennen musst du nichts — jede beginnt mit „Von:“.</p>
+  <div class="card">
+    <textarea id="inp" spellcheck="false"></textarea>
+    <div class="row">
+      <button class="primary" onclick="run()">Auswerten</button>
+      <button class="ghost" onclick="loadSample()">Beispiel laden</button>
+      <button class="ghost" onclick="document.getElementById('inp').value='';run()">Leeren</button>
+      <span class="hint" id="parsehint"></span>
+    </div>
+  </div>
+
+  <div id="out"></div>
+
+  <footer>Interne Auswertung des Kernteams · Stimmen: ◈ ins Programm · ○ Wunsch · ✖ eher nicht. Eine fehlende Stimme ist keine Ablehnung — nur ein ausdrückliches „eher nicht“ zählt als Gegen-Signal.</footer>
+</div>
+
+<script>
+const DATA = {"ideas": [{"nr": "01", "title": "Streifzüge ins Morgen", "t": "①"}, {"nr": "02", "title": "Tandem-Streifzüge", "t": "①"}, {"nr": "03", "title": "Kiez-Touren", "t": "①"}, {"nr": "12", "title": "Gesundes Quartier — Planetary Health", "t": "①"}, {"nr": "13", "title": "Hitzeschutz & Hitzebilder", "t": "①"}, {"nr": "14", "title": "Schatteninseln / Speakers Corner", "t": "①"}, {"nr": "15", "title": "Pflanzenpatenschaften", "t": "①"}, {"nr": "16", "title": "Zukunftsplatz — Stadtraum auf Zeit", "t": "①"}, {"nr": "17", "title": "Schwimmender Uferweg", "t": "①"}, {"nr": "18", "title": "Zukunftshafen & Wasserinszenierung", "t": "①"}, {"nr": "19", "title": "Karneval der Flossboote & Spree-Fahrten", "t": "①"}, {"nr": "20", "title": "Blau-grüner Campus Wilhelminenhof", "t": "①"}, {"nr": "21", "title": "Energie-Bogen", "t": "①"}, {"nr": "22", "title": "Futura-Song (Bernadette La Hengst)", "t": "②"}, {"nr": "23", "title": "Öffentliches Tanzen & Dance Gathering", "t": "②"}, {"nr": "24", "title": "Körper und Stadt", "t": "②"}, {"nr": "25", "title": "Lesung „Drei ostdeutsche Frauen“", "t": "②"}, {"nr": "27", "title": "Open Call Fotografie", "t": "②"}, {"nr": "29", "title": "SF-Workshop (Isabella Hermann)", "t": "②"}, {"nr": "30", "title": "SF-Literatur (Barbara Neuwirth)", "t": "②"}, {"nr": "31", "title": "Filme & Vorträge (Harald Friedl)", "t": "②"}, {"nr": "32", "title": "VR-Kunst & Zeitpyramide (Faller)", "t": "②"}, {"nr": "33", "title": "Zeitkapsel Futura 2033", "t": "②"}, {"nr": "41", "title": "Nachhaltige Kunst", "t": "②"}, {"nr": "42", "title": "Orte der Ruhe und Besinnung", "t": "①"}, {"nr": "43", "title": "Wilde Sophie", "t": "②"}, {"nr": "44", "title": "Flugsimulator", "t": "③"}, {"nr": "45", "title": "Kristalle mit Zukunft", "t": "③"}, {"nr": "46", "title": "Wasserstoff und Energie", "t": "③"}, {"nr": "47", "title": "3D-Druck Basics", "t": "③"}, {"nr": "48", "title": "Reisen zum Mars", "t": "③"}, {"nr": "49", "title": "Roboter Arti am Kaisersteg", "t": "③"}, {"nr": "50", "title": "Handwerk: Lost & Future", "t": "③"}, {"nr": "51", "title": "Digitales Erlebnismuseum", "t": "③"}, {"nr": "52", "title": "Quartiersmodell & Simulationsraum", "t": "③"}, {"nr": "55", "title": "Experimental-Labor", "t": "③"}, {"nr": "57", "title": "Arbeit & Wirtschaft (Business Walk …)", "t": "③"}, {"nr": "59", "title": "KompromissLab", "t": "④"}, {"nr": "60", "title": "Zukunftswerkstatt (Ludwig Weh)", "t": "④"}, {"nr": "61", "title": "Zentrum für Demokratie", "t": "④"}, {"nr": "62", "title": "VR für die Kiezblocks", "t": "④"}, {"nr": "63", "title": "Migrantische Perspektiven", "t": "④"}, {"nr": "65", "title": "Mein Grundeinkommen", "t": "④"}, {"nr": "66", "title": "Running Dinner", "t": "④"}, {"nr": "67", "title": "Stadtplan-Werkstatt", "t": "④"}, {"nr": "70", "title": "Zukunftsbüro & Klassiker 2025", "t": "④"}, {"nr": "73", "title": "Kapitel 21 — Brücke Zukunftsforschung", "t": "④"}, {"nr": "74", "title": "Life Repair Kit — gegen Zukunftsangst", "t": "①"}], "themes": {"①": "Stadtlandschaften", "②": "Kunst macht Zukunft", "③": "Zukunft selber machen", "④": "Alle an einen Tisch"}, "tc": {"①": "#1F6F5C", "②": "#7C3AAA", "③": "#C55A11", "④": "#B03A2E"}};
+const SAMPLE = "Auswahl-Umfrage — Futura Ideen\n\nVon: Marielle <morawitz@2komma8.com>\n\n[+] ins Programm (10):\n  22 Futura-Song (Bernadette La Hengst)\n  27 Open Call Fotografie\n  29 SF-Workshop (Isabella Hermann)\n  30 SF-Literatur (Barbara Neuwirth)\n  31 Filme & Vorträge (Harald Friedl)\n  32 VR-Kunst & Zeitpyramide (Faller)\n  41 Nachhaltige Kunst\n  59 KompromissLab\n  60 Zukunftswerkstatt (Ludwig Weh)\n  73 Kapitel 21 — Brücke Zukunftsforschung\n\n[o] Wunsch (10):\n  17 Schwimmender Uferweg\n  18 Zukunftshafen & Wasserinszenierung\n  42 Orte der Ruhe und Besinnung\n  33 Zeitkapsel Futura 2033\n  44 Flugsimulator\n  45 Kristalle mit Zukunft\n  50 Handwerk: Lost & Future\n  55 Experimental-Labor\n  65 Mein Grundeinkommen\n  70 Zukunftsbüro & Klassiker 2025\n\n[-] eher nicht (0):\n  —\n\nIch übernehme (1):\n  27 Open Call Fotografie\n\nKommentar: —";
+const IDEAS = DATA.ideas;              // [{nr,title,t}]
+const IDX = {}; IDEAS.forEach(i=>IDX[i.nr]=i);
+let SORT = {key:'prog', dir:-1};
+
+function loadSample(){ document.getElementById('inp').value = SAMPLE; run(); }
+
+function parse(text){
+  const blocks = text.split(/(?=^\s*Von:)/m).filter(b=>/Von:/.test(b));
+  const res=[];
+  for(const b of blocks){
+    const nm=(b.match(/Von:\s*(.+)/)||[])[1]||'Unbekannt';
+    const name=nm.replace(/<[^>]*>/,'').trim()||'Unbekannt';
+    const sec={prog:[],wunsch:[],nicht:[],take:[]};
+    let cur=null;
+    for(const line of b.split(/\r?\n/)){
+      if(/\[\+\]|ins Programm/i.test(line) && !/^\s*\d/.test(line)){cur='prog';continue;}
+      if(/\[o\]|Wunsch/i.test(line) && !/^\s*\d/.test(line)){cur='wunsch';continue;}
+      if(/\[-\]|eher nicht/i.test(line) && !/^\s*\d/.test(line)){cur='nicht';continue;}
+      if(/Ich übernehme/i.test(line)){cur='take';continue;}
+      if(/^\s*Kommentar:/i.test(line)){cur=null;continue;}
+      const m=line.match(/^\s+(\d{1,2})\b/);
+      if(cur && m){ sec[cur].push(String(m[1]).padStart(2,'0')); }
+    }
+    res.push(Object.assign({name},sec));
+  }
+  return res;
+}
+
+function status(p,w,n){
+  if(p>0&&n>0) return ['st','Streitfall'];
+  if(p>=2&&n===0) return ['fav','Favorit'];
+  if(p>0&&n===0) return ['prog','ins Programm'];
+  if(p===0&&w>0&&n===0) return ['wu','Wunsch'];
+  if(n>0&&p===0) return ['no','zurückstellen'];
+  return ['ns','keine Stimme'];
+}
+
+function run(){
+  const responses = parse(document.getElementById('inp').value);
+  document.getElementById('parsehint').textContent = responses.length? (responses.length+' Rücklauf/Rückläufe erkannt') : 'kein Rücklauf erkannt';
+  // aggregate
+  const agg={}; IDEAS.forEach(i=>agg[i.nr]={prog:0,wunsch:0,nicht:0,take:[]});
+  responses.forEach(r=>{
+    ['prog','wunsch','nicht'].forEach(k=>r[k].forEach(nr=>{ if(agg[nr]) agg[nr][k]++; }));
+    r.take.forEach(nr=>{ if(agg[nr]) agg[nr].take.push(r.name); });
+  });
+  const rows = IDEAS.map(i=>{
+    const a=agg[i.nr]; const score=a.prog*2+a.wunsch-a.nicht*2;
+    return {nr:i.nr,title:i.title,t:i.t, prog:a.prog,wunsch:a.wunsch,nicht:a.nicht,take:a.take,score};
+  });
+  // summary
+  const nResp=responses.length;
+  const withProg=rows.filter(r=>r.prog>0).length;
+  const streit=rows.filter(r=>r.prog>0&&r.nicht>0).length;
+  const noVote=rows.filter(r=>r.prog===0&&r.wunsch===0&&r.nicht===0).length;
+  let html='';
+  html+='<h2>2 · Ergebnis</h2><p class="sub">'+nResp+' Rücklauf/Rückläufe · '+IDEAS.length+' Ideen der vier Fokusthemen.</p>';
+  html+='<div class="tiles">'
+    +'<div class="tile a"><div class="n">'+nResp+'</div><div class="l">Rückläufe</div></div>'
+    +'<div class="tile b"><div class="n">'+withProg+'</div><div class="l">Ideen mit mind. 1× „ins Programm“</div></div>'
+    +'<div class="tile c"><div class="n">'+streit+'</div><div class="l">Streitfälle (Ja &amp; Nein zugleich)</div></div>'
+    +'<div class="tile d"><div class="n">'+noVote+'</div><div class="l">noch ohne jede Stimme</div></div>'
+    +'</div>';
+  if(nResp){
+    html+='<div class="voters"><b>Abgestimmt:</b> '+responses.map(r=>'<span class="v">'+esc(r.name)+'</span>').join('')+'</div>';
+  }
+  // sort
+  rows.sort((x,y)=>{
+    let v;
+    if(SORT.key==='nr') v = x.nr.localeCompare(y.nr);
+    else if(SORT.key==='thema') v = x.t.localeCompare(y.t) || y.score-x.score;
+    else if(SORT.key==='prog') v = (x.prog-y.prog)|| (x.score-y.score);
+    else if(SORT.key==='wunsch') v = x.wunsch-y.wunsch;
+    else if(SORT.key==='nicht') v = x.nicht-y.nicht;
+    else v = x.score-y.score;
+    return SORT.dir*v;
+  });
+  html+='<table><thead><tr>'
+    +'<th class="num" onclick="setSort(\'nr\')">Nr</th>'
+    +'<th onclick="setSort(\'thema\')">Idee</th>'
+    +'<th class="num" onclick="setSort(\'prog\')">◈ Programm</th>'
+    +'<th class="num" onclick="setSort(\'wunsch\')">○ Wunsch</th>'
+    +'<th class="num" onclick="setSort(\'nicht\')">✖ nicht</th>'
+    +'<th>übernimmt</th><th>Status</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    const [cls,lab]=status(r.prog,r.wunsch,r.nicht);
+    html+='<tr>'
+      +'<td class="num">'+r.nr+'</td>'
+      +'<td><span class="dot" style="background:'+DATA.tc[r.t]+'"></span>'+esc(r.title)+'</td>'
+      +'<td class="num"><span class="cnt '+(r.prog?'p':'z')+'">'+r.prog+'</span></td>'
+      +'<td class="num"><span class="cnt '+(r.wunsch?'w':'z')+'">'+r.wunsch+'</span></td>'
+      +'<td class="num"><span class="cnt '+(r.nicht?'n':'z')+'">'+r.nicht+'</span></td>'
+      +'<td>'+(r.take.length?'<span class="take">'+r.take.map(esc).join(', ')+'</span>':'<span class="hint">—</span>')+'</td>'
+      +'<td><span class="chip '+cls+'">'+lab+'</span></td>'
+      +'</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('out').innerHTML=html;
+}
+function setSort(k){ if(SORT.key===k) SORT.dir*=-1; else {SORT.key=k; SORT.dir = (k==='nr'||k==='thema')?1:-1;} run(); }
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+loadSample();
+</script>
+</body>
+</html>
